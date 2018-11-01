@@ -33,7 +33,6 @@ public class DraggablePanelLayout extends FrameLayout {
     // Is the slidingPanel being touched ?
     private boolean isTouched = false;
     // Is the slidingPanel in its expanded form ?
-    private boolean isExpanded = false;
     private boolean isOpened = false;
     private boolean isOpening = false;
     private boolean isHalfway = false;
@@ -106,7 +105,7 @@ public class DraggablePanelLayout extends FrameLayout {
     // Returns a valid translation value, which would be within the bounds
     // So that the chances of a translation event beyond this range won't occur
     private float boundTranslation(float translation) {
-        if (!isExpanded) {
+        if (!isOpened) {
             if (translation > 0) {
                 translation = 0;
             } else if (Math.abs(translation) >= slidingPanel.getMeasuredHeight() - bottomPanelPeekHeight) {
@@ -198,10 +197,16 @@ public class DraggablePanelLayout extends FrameLayout {
 
             @Override
             public void onAnimationEnd(Animator animator) {
+                isOpened = isOpening;
                 bottomPanel.setVisibility(isOpening ? View.GONE : View.VISIBLE);
+
+                bottomPanel.setTranslationY(0);
+                slidingPanel.setTranslationY(0);
 
                 slidingPanel.setLayerType(slidingPanelLayerType, null);
                 bottomPanel.setLayerType(bottomPanelLayerType, null);
+
+                requestLayout();
             }
 
             @Override
@@ -230,10 +235,9 @@ public class DraggablePanelLayout extends FrameLayout {
 
                 slidingPanel.setTranslationY(translation);
                 bottomPanel.setTranslationY(
-                        isExpanded ?
-                                (getMeasuredHeight() - bottomPanelPeekHeight - translation) * parallaxFactor
-                                :
-                                translation * parallaxFactor
+                        isOpened
+                                ? (getMeasuredHeight() - bottomPanelPeekHeight - translation) * parallaxFactor
+                                : translation * parallaxFactor
                 );
             }
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
